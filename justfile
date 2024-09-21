@@ -1,6 +1,10 @@
 debug_flags := "-use-separate-modules -debug -dynamic-map-calls"
 out := "-out:build/puzzle_solver.bin"
+config := "-define:SIDE=2"
+
 run:
-    ../Odin/odin run . {{debug_flags}} {{out}} -show-timings
+    ../Odin/odin run src/ {{debug_flags}} {{out}} {{config}} -show-timings
 build:
-    ../Odin/odin build . {{debug_flags}} {{out}} -show-timings
+    ../Odin/odin build src/ {{debug_flags}} {{out}} {{config}} -show-timings
+test:
+	../Odin/odin test src/
