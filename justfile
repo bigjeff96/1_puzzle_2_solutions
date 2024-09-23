@@ -1,10 +1,18 @@
 debug_flags := "-use-separate-modules -debug -dynamic-map-calls"
-out := "-out:build/puzzle_solver.bin"
-config := "-define:SIDE=2"
+exe := "build/puzzle_solver.bin"
 
-run:
-    ../Odin/odin run src/ {{debug_flags}} {{out}} {{config}} -show-timings
-build:
-    ../Odin/odin build src/ {{debug_flags}} {{out}} {{config}} -show-timings
-test:
-	../Odin/odin test src/
+build: fmt
+    ../Odin/odin build src/ {{ debug_flags }} -out:{{ exe }} -show-timings
+
+run: build
+    ./{{ exe }}
+
+test: fmt
+    ../Odin/odin test src/ 
+
+fmt:
+    #!/bin/env bash
+    set -ep
+    for i in $(find . -name "*.odin" -type f); do
+        ~/Projects/ols/odinfmt -w "$i"
+    done
