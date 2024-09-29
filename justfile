@@ -1,5 +1,5 @@
 debug_flags := "-use-separate-modules -debug -dynamic-map-calls"
-exe :=  if os() == "linux" {"build/puzzle_solver.exe"} else {"build/puzzle_solver.exe"}
+exe :=  "build/puzzle_solver.exe"
 FIND := if os() == "windows" {"C:/cygwin64/bin/find"} else {"find"}
 
 build: fmt
