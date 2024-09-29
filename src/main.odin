@@ -74,8 +74,7 @@ make_puzzle :: proc(dimensions: [2]int) -> (puzzle: Puzzle) {
     puzzle.pieces = make([]Puzzle_piece, dimensions.x * dimensions.y)
     puzzle.dimensions = dimensions
 
-    total_connection_types :=
-        (dimensions.x - 1) * dimensions.y + (dimensions.y - 1) * dimensions.x
+    total_connection_types := (dimensions.x - 1) * dimensions.y + (dimensions.y - 1) * dimensions.x
 
     // Borders
     for &piece, id in puzzle.pieces {
