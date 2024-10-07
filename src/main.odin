@@ -147,3 +147,7 @@ solve_puzzle :: proc(puzzle: Puzzle) -> (solution: Puzzle) {
     solution.pieces = solution_pieces[:]
     return
 }
+
+test_proc :: proc() {
+    fmt.println("hihi")
+}
