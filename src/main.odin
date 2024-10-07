@@ -155,3 +155,5 @@ test_proc :: proc() {
 test_another_proc :: proc() {
     fmt.println("haha")
 }
+
+BABA :: 69
