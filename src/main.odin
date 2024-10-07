@@ -151,3 +151,7 @@ solve_puzzle :: proc(puzzle: Puzzle) -> (solution: Puzzle) {
 test_proc :: proc() {
     fmt.println("hihi")
 }
+
+test_another_proc :: proc() {
+    fmt.println("haha")
+}
