@@ -53,7 +53,7 @@ coord_to_puzzle_id :: proc(coord: [2]int, dimensions: [2]int) -> (id: int) {
     return id
 }
 
-SIDE_LENGTH :: #config(SIDE, 3)
+SIDE_LENGTH :: #config(SIDE, 5)
 
 get_neighbor_piece :: proc(
     using puzzle: Puzzle,
@@ -104,6 +104,18 @@ make_puzzle :: proc(dimensions: [2]int) -> (puzzle: Puzzle) {
 info :: log.info
 infof :: log.infof
 
+validate_puzzle_connections_hihi :: proc(using puzzle: Puzzle) {
+    for piece, id in pieces {
+        coord := puzzle_id_to_coord(id, dimensions)
+        for side in Puzzle_side {
+            if piece[side] != BORDER {
+                neighbor_piece, _ := get_neighbor_piece(puzzle, coord, side)
+                assert(piece[side] == neighbor_piece[opposite_side[side]])
+            }
+        }
+    }
+}
+
 main :: proc() {
     context.logger = log.create_console_logger(.Info, {.Level, .Line, .Procedure})
     rand.reset(0)
@@ -111,19 +123,76 @@ main :: proc() {
 
     puzzle: Puzzle = make_puzzle(dimensions)
     info("Final Puzzle:\n", puzzle)
-
-    rand.shuffle(puzzle.pieces)
+    shuffled_puzzle: Puzzle
+    shuffled_puzzle.pieces = make([]Puzzle_piece, dimensions.x * dimensions.y)
+    copy(shuffled_puzzle.pieces, puzzle.pieces)
+    shuffled_puzzle.dimensions = puzzle.dimensions
+    rand.shuffle(shuffled_puzzle.pieces)
     info("Puzzle after shuffle:\n", puzzle)
 
-    solved_puzzle := solve_puzzle(puzzle)
-    // for i in 0 ..< dimensions.x * dimensions.y {
-    //     assert(puzzle.pieces[i] == solved_puzzle.pieces[i])
-    // }
+    solved_puzzle := solve_puzzle(shuffled_puzzle)
+    info("solution:\n", solved_puzzle)
+    for i in 0 ..< dimensions.x * dimensions.y {
+        assert(puzzle.pieces[i] == solved_puzzle.pieces[i])
+    }
+    // validate_puzzle_connections_hihi(solved_puzzle)
 }
 
 solve_puzzle :: proc(puzzle: Puzzle) -> (solution: Puzzle) {
+
+    recursive_solve :: proc(
+        solution_pieces: []Puzzle_piece,
+        coord_last_added_piece: [2]int,
+        rest_pieces_ids: ^[dynamic]int,
+        puzzle: Puzzle,
+    ) {
+        total_pieces_left := len(rest_pieces_ids)
+        if (total_pieces_left == 1) {
+            id_last_solved_piece := coord_to_puzzle_id(coord_last_added_piece, puzzle.dimensions)
+            last_added_piece := solution_pieces[id_last_solved_piece]
+            last_piece_to_add := puzzle.pieces[rest_pieces_ids[0]]
+
+            for &piece in solution_pieces {
+                if piece == NULL_PIECE {
+                    piece = last_piece_to_add
+                    break
+                }
+            }
+            return
+        }
+        id_last_solved_piece := coord_to_puzzle_id(coord_last_added_piece, puzzle.dimensions)
+        last_added_piece := solution_pieces[id_last_solved_piece]
+
+        new_piece_id: int
+        id_to_remove: int
+        side_that_connects: Puzzle_side
+
+        for piece_id, id in rest_pieces_ids {
+            piece := puzzle.pieces[piece_id]
+            for side in Puzzle_side do if last_added_piece[side] != BORDER {
+                if last_added_piece[side] == piece[opposite_side[side]] {
+                    side_that_connects = side
+                    new_piece_id = piece_id
+                    id_to_remove = id
+                    break
+                }
+            }
+            if new_piece_id != 0 do break
+        }
+
+        coord_of_new_piece := coord_last_added_piece + normals[side_that_connects]
+        id := coord_to_puzzle_id(coord_of_new_piece, puzzle.dimensions)
+        solution_pieces[id] = puzzle.pieces[new_piece_id]
+
+        unordered_remove(rest_pieces_ids, id_to_remove)
+
+        recursive_solve(solution_pieces, coord_of_new_piece, rest_pieces_ids, puzzle)
+    }
     solution.dimensions = puzzle.dimensions
-    solution_pieces: [dynamic]Puzzle_piece
+    solution_pieces := make([]Puzzle_piece, puzzle.dimensions.x * puzzle.dimensions.y)
+    rest_pieces_ids := make([dynamic]int, puzzle.dimensions.x * puzzle.dimensions.y)
+
+    for &piece_id, id in rest_pieces_ids do piece_id = id
 
     // get bottom left corner piece, which has BORDER at left and top
     id_bottom_left := 0
@@ -133,28 +202,12 @@ solve_puzzle :: proc(puzzle: Puzzle) -> (solution: Puzzle) {
             break
         }
     }
-    append(&solution_pieces, puzzle.pieces[id_bottom_left])
-    infof("bottom left piece is {}", id_bottom_left)
-    bottom_left := solution_pieces[0]
-    for piece, id in puzzle.pieces do if id != id_bottom_left {
-        for side in Puzzle_side {
-            if (bottom_left[side] == piece[opposite_side[side]] && bottom_left[side] != BORDER) {
-                infof("\nbottom left: {}\npiece: {}", bottom_left, piece)
-            }
-        }
-    }
 
-    solution.pieces = solution_pieces[:]
+    solution_pieces[0] = puzzle.pieces[id_bottom_left]
+    unordered_remove(&rest_pieces_ids, id_bottom_left)
+
+    recursive_solve(solution_pieces, {0, 0}, &rest_pieces_ids, puzzle)
+
+    solution.pieces = solution_pieces
     return
 }
-
-test_proc :: proc() {
-    fmt.println("hihi")
-}
-
-test_another_proc :: proc() {
-    fmt.println("haha")
-}
-
-BABA :: 69
-bibi ::420

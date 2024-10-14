@@ -1,6 +1,7 @@
 package puzzle_solver
 
 import "core:fmt"
+import "core:math/rand"
 import "core:testing"
 
 @(test)
@@ -19,10 +20,12 @@ validate_puzzle_connections :: proc(t: ^testing.T, using puzzle: Puzzle) {
         for side in Puzzle_side {
             if piece[side] != BORDER {
                 neighbor_piece, _ := get_neighbor_piece(puzzle, coord, side)
-                testing.expect(
+                testing.expectf(
                     t,
                     piece[side] == neighbor_piece[opposite_side[side]],
-                    "Pieces do not connect",
+                    "Pieces do not connect {} {}",
+                    piece[side],
+                    neighbor_piece[opposite_side[side]],
                 )
             }
         }
@@ -71,4 +74,19 @@ valid_puzzle_5_dim :: proc(t: ^testing.T) {
     defer delete(puzzle.pieces)
 
     validate_puzzle_connections(t, puzzle)
+}
+
+@(test)
+test_solver_5_dim :: proc(t: ^testing.T) {
+    Dimensions :: 4
+    dimensions := [2]int{Dimensions, Dimensions}
+
+    puzzle := make_puzzle(dimensions)
+    defer delete(puzzle.pieces)
+
+    rand.shuffle(puzzle.pieces)
+    solved_puzzle := solve_puzzle(puzzle)
+    defer free(&solved_puzzle.pieces)
+
+    validate_puzzle_connections(t, solved_puzzle)
 }
