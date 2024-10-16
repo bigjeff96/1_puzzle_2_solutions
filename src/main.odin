@@ -13,6 +13,8 @@ Connection_type :: distinct int
 BORDER: Connection_type : -1
 NONE: Connection_type : 0
 
+NULL_PIECE: Puzzle_piece : {.left = NONE, .right = NONE, .top = NONE, .down = NONE}
+
 Puzzle :: struct {
     pieces:     []Puzzle_piece,
     dimensions: [2]int,
@@ -104,18 +106,6 @@ make_puzzle :: proc(dimensions: [2]int) -> (puzzle: Puzzle) {
 info :: log.info
 infof :: log.infof
 
-validate_puzzle_connections_hihi :: proc(using puzzle: Puzzle) {
-    for piece, id in pieces {
-        coord := puzzle_id_to_coord(id, dimensions)
-        for side in Puzzle_side {
-            if piece[side] != BORDER {
-                neighbor_piece, _ := get_neighbor_piece(puzzle, coord, side)
-                assert(piece[side] == neighbor_piece[opposite_side[side]])
-            }
-        }
-    }
-}
-
 main :: proc() {
     context.logger = log.create_console_logger(.Info, {.Level, .Line, .Procedure})
     rand.reset(0)
@@ -135,7 +125,6 @@ main :: proc() {
     for i in 0 ..< dimensions.x * dimensions.y {
         assert(puzzle.pieces[i] == solved_puzzle.pieces[i])
     }
-    // validate_puzzle_connections_hihi(solved_puzzle)
 }
 
 solve_puzzle :: proc(puzzle: Puzzle) -> (solution: Puzzle) {
